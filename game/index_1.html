@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Word Mining Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --black:#050505;--surface:#0a0f0a;--surface2:#111811;
+  --green:#44ff88;--green-dim:rgba(68,255,136,0.12);--green-border:rgba(68,255,136,0.25);
+  --gold:#ffd700;--gold-dim:rgba(255,215,0,0.1);--white:#f0f0f0;--muted:#666;--muted2:#444;
+}
+html{scroll-behavior:smooth}
+body{background:var(--black);color:var(--white);font-family:'Inter',sans-serif;overflow-x:hidden}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:16px 48px;background:rgba(5,5,5,0.85);backdrop-filter:blur(12px);border-bottom:1px solid rgba(68,255,136,0.08)}
+.nav-logo{font-family:'Cinzel',serif;font-size:15px;font-weight:700;color:var(--green);letter-spacing:0.08em;text-decoration:none}
+.nav-links{display:flex;gap:28px;list-style:none}
+.nav-links a{color:var(--muted);font-size:13px;text-decoration:none;letter-spacing:0.04em;transition:color 0.2s}
+.nav-links a:hover{color:var(--white)}
+.nav-cta{background:var(--green-dim)!important;border:1px solid var(--green-border)!important;border-radius:6px;color:var(--green)!important;padding:7px 16px;font-size:12px!important;font-weight:600}
+#hero{position:relative;min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:120px 48px 80px}
+#particle-canvas{position:absolute;inset:0;pointer-events:none}
+.hero-content{position:relative;z-index:2;text-align:center;max-width:700px}
+.hero-eyebrow{font-size:11px;letter-spacing:0.2em;color:var(--green);text-transform:uppercase;margin-bottom:20px;font-weight:500}
+.hero-title{font-family:'Cinzel',serif;font-size:clamp(42px,7vw,84px);font-weight:900;line-height:0.95;letter-spacing:-0.02em;color:var(--white);margin-bottom:24px}
+.hero-title span{color:var(--green)}
+.hero-sub{font-size:16px;color:var(--muted);line-height:1.7;max-width:480px;margin:0 auto 40px;font-weight:300}
+.hero-buttons{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn-primary{background:var(--green);color:#000;font-weight:700;font-size:13px;padding:14px 32px;border-radius:8px;text-decoration:none;letter-spacing:0.04em;transition:opacity 0.2s;display:inline-block}
+.btn-primary:hover{opacity:0.85}
+.btn-secondary{background:transparent;color:var(--white);font-size:13px;padding:14px 32px;border-radius:8px;text-decoration:none;border:1px solid var(--muted2);letter-spacing:0.04em;transition:border-color 0.2s;display:inline-block}
+.btn-secondary:hover{border-color:var(--muted)}
+.hero-stats{display:flex;gap:48px;justify-content:center;margin-top:64px;padding-top:40px;border-top:1px solid rgba(255,255,255,0.06)}
+.stat-num{font-family:'Cinzel',serif;font-size:28px;font-weight:700;color:var(--green);text-align:center}
+.stat-label{font-size:11px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-top:4px;text-align:center}
+#play{padding:80px 0;background:var(--surface)}
+.section-label{text-align:center;font-size:11px;letter-spacing:0.2em;color:var(--green);text-transform:uppercase;margin-bottom:12px;font-weight:500}
+.section-title{text-align:center;font-family:'Cinzel',serif;font-size:clamp(24px,4vw,40px);font-weight:700;color:var(--white);margin-bottom:48px}
+.game-wrapper{display:flex;max-width:1280px;margin:0 auto;padding:0 24px}
+.game-frame-wrap{flex:1;min-width:0;background:#000;border-radius:12px 0 0 12px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);border-right:none}
+.game-frame-wrap iframe{width:100%;height:600px;border:none;display:block}
+.lb-sidebar{width:260px;flex-shrink:0;background:var(--surface2);border:1px solid var(--green-border);border-radius:0 12px 12px 0;display:flex;flex-direction:column;overflow:hidden}
+.lb-sidebar-header{padding:14px 16px;border-bottom:1px solid rgba(68,255,136,0.12);display:flex;align-items:center;justify-content:space-between}
+.lb-sidebar-title{font-family:'Cinzel',serif;font-size:12px;font-weight:700;color:var(--gold)}
+.lb-online{font-size:10px;color:rgba(68,255,136,0.6)}
+.lb-sort-row{display:flex;gap:6px;padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.05)}
+.lb-sort-btn{flex:1;font-size:9px;padding:4px;border-radius:4px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:var(--muted);cursor:pointer;transition:all 0.2s}
+.lb-sort-btn.active{background:var(--gold-dim);border-color:rgba(255,215,0,0.3);color:var(--gold)}
+.lb-entries{flex:1;overflow-y:auto;padding:6px}
+.lb-entries::-webkit-scrollbar{width:3px}
+.lb-entries::-webkit-scrollbar-thumb{background:rgba(68,255,136,0.2);border-radius:2px}
+.lb-entry{display:flex;align-items:center;gap:7px;padding:6px 8px;border-radius:6px;margin-bottom:2px}
+.lb-entry:hover{background:rgba(255,255,255,0.03)}
+.lb-rank{font-size:10px;font-weight:700;width:22px;text-align:center;flex-shrink:0}
+.lb-pfp-sm{width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,0.08);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px}
+.lb-pfp-sm img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.lb-info{flex:1;min-width:0}
+.lb-uname{font-size:11px;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+.lb-rarest{font-size:9px;color:var(--muted)}
+.lb-words-val{font-size:11px;font-weight:700;color:#aaff44;flex-shrink:0}
+.lb-loading{padding:20px;text-align:center;font-size:11px;color:var(--muted)}
+#features{padding:100px 48px;background:var(--black)}
+.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;max-width:1100px;margin:0 auto}
+.feature-card{background:var(--surface);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:28px;transition:border-color 0.2s}
+.feature-card:hover{border-color:var(--green-border)}
+.feature-icon{font-size:28px;margin-bottom:14px}
+.feature-name{font-family:'Cinzel',serif;font-size:14px;font-weight:600;color:var(--white);margin-bottom:8px}
+.feature-desc{font-size:13px;color:var(--muted);line-height:1.65}
+.feature-tag{display:inline-block;margin-top:12px;font-size:10px;padding:3px 8px;border-radius:4px;background:var(--green-dim);color:var(--green);border:1px solid var(--green-border);letter-spacing:0.06em}
+#tiers{padding:100px 48px;background:var(--surface)}
+.tiers-list{display:flex;flex-wrap:wrap;gap:10px;max-width:900px;margin:0 auto;justify-content:center}
+.tier-chip{padding:8px 20px;border-radius:20px;font-family:'Cinzel',serif;font-size:12px;font-weight:600;border:1px solid;letter-spacing:0.06em}
+#about{padding:100px 48px;background:var(--black);text-align:center}
+.about-inner{max-width:700px;margin:0 auto}
+.about-inner p{font-size:15px;color:var(--muted);line-height:1.8;margin-bottom:16px}
+.about-inner a{color:var(--green);text-decoration:none}
+#changelog{padding:100px 48px;background:var(--surface)}
+.changelog-list{max-width:700px;margin:0 auto;display:flex;flex-direction:column;gap:24px}
+.cl-entry{border-left:2px solid var(--green-border);padding-left:20px}
+.cl-version{font-family:'Cinzel',serif;font-size:13px;font-weight:700;color:var(--green);margin-bottom:4px}
+.cl-date{font-size:11px;color:var(--muted);margin-bottom:10px}
+.cl-items{list-style:none;display:flex;flex-direction:column;gap:5px}
+.cl-items li{font-size:13px;color:rgba(240,240,240,0.7);padding-left:14px;position:relative}
+.cl-items li::before{content:'—';position:absolute;left:0;color:var(--muted2)}
+#download{padding:100px 48px;background:var(--black);text-align:center}
+.download-card{max-width:480px;margin:0 auto;background:var(--surface);border:1px solid var(--green-border);border-radius:16px;padding:48px 40px}
+.download-icon{font-size:48px;margin-bottom:20px}
+.download-title{font-family:'Cinzel',serif;font-size:24px;font-weight:700;color:var(--white);margin-bottom:10px}
+.download-sub{font-size:13px;color:var(--muted);margin-bottom:32px;line-height:1.6}
+.download-meta{font-size:11px;color:var(--muted2);margin-top:16px}
+footer{padding:40px 48px;border-top:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.footer-logo{font-family:'Cinzel',serif;font-size:13px;color:var(--muted);font-weight:600}
+.footer-links{display:flex;gap:24px}
+.footer-links a{font-size:12px;color:var(--muted2);text-decoration:none;transition:color 0.2s}
+.footer-links a:hover{color:var(--muted)}
+@media(max-width:900px){
+  nav{padding:14px 20px}.nav-links{display:none}
+  #hero{padding:100px 20px 60px}.hero-stats{gap:24px}
+  .game-wrapper{flex-direction:column;padding:0 12px}
+  .game-frame-wrap{border-radius:12px 12px 0 0;border-right:1px solid rgba(255,255,255,0.08);border-bottom:none}
+  .lb-sidebar{width:100%;border-radius:0 0 12px 12px}
+  .game-frame-wrap iframe{height:500px}
+  #features,#tiers,#about,#changelog,#download{padding:60px 20px}
+  footer{flex-direction:column;text-align:center;padding:32px 20px}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="#" class="nav-logo">⛏ Word Mining</a>
+  <ul class="nav-links">
+    <li><a href="#play">Play</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#tiers">Tiers</a></li>
+    <li><a href="#about">About</a></li>
+    <li><a href="#changelog">Changelog</a></li>
+    <li><a href="https://discord.gg/G8qA9ZqMx" target="_blank" class="nav-cta">Discord</a></li>
+  </ul>
+</nav>
+
+<section id="hero">
+  <canvas id="particle-canvas"></canvas>
+  <div class="hero-content">
+    <div class="hero-eyebrow">⛏ PiffGames · Indie</div>
+    <h1 class="hero-title">Mine<br><span>Words.</span></h1>
+    <p class="hero-sub">Dig through layers of rare ores, chase Celestials and Absolutes, and compete on a universal leaderboard. How deep can you go?</p>
+    <div class="hero-buttons">
+      <a href="#play" class="btn-primary">Play Now — Free</a>
+      <a href="#download" class="btn-secondary">Download for Windows</a>
+    </div>
+    <div class="hero-stats">
+      <div><div class="stat-num" id="stat-players">—</div><div class="stat-label">Players</div></div>
+      <div><div class="stat-num">283+</div><div class="stat-label">Words</div></div>
+      <div><div class="stat-num">13</div><div class="stat-label">Tiers</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="play">
+  <div class="section-label">Play Now</div>
+  <h2 class="section-title">Mine directly in your browser</h2>
+  <div class="game-wrapper">
+    <div class="game-frame-wrap">
+      <iframe src="game/index.html" allowfullscreen scrolling="no" title="Word Mining Game"></iframe>
+    </div>
+    <aside class="lb-sidebar">
+      <div class="lb-sidebar-header">
+        <span class="lb-sidebar-title">🏆 Leaderboard</span>
+        <span class="lb-online" id="site-online-count">● — online</span>
+      </div>
+      <div class="lb-sort-row">
+        <button class="lb-sort-btn active" id="site-sort-words" onclick="setSiteSort('words')">Words</button>
+        <button class="lb-sort-btn" id="site-sort-rarest" onclick="setSiteSort('rarest')">Rarest</button>
+      </div>
+      <div class="lb-entries" id="site-lb-entries"><div class="lb-loading">Loading...</div></div>
+    </aside>
+  </div>
+</section>
+
+<section id="features">
+  <div class="section-label">What's Inside</div>
+  <h2 class="section-title">Built for the grind</h2>
+  <div class="features-grid">
+    <div class="feature-card"><div class="feature-icon">💎</div><div class="feature-name">13 Ore Tiers</div><div class="feature-desc">From Common to Absolute, each tier rarer than the last. Chase Celestials at 1-in-700-million odds or hunt seasonal ores that only appear on specific dates.</div><span class="feature-tag">DISCOVERY</span></div>
+    <div class="feature-card"><div class="feature-icon">🏆</div><div class="feature-name">Universal Leaderboard</div><div class="feature-desc">Compete with every player across itch.io, this site, and the desktop app. One account, one rank, everywhere.</div><span class="feature-tag">COMPETITION</span></div>
+    <div class="feature-card"><div class="feature-icon">👥</div><div class="feature-name">Friends & Trading</div><div class="feature-desc">Add friends, chat live, and trade ores directly. Missed a seasonal? Find someone who has it.</div><span class="feature-tag">SOCIAL</span></div>
+    <div class="feature-card"><div class="feature-icon">🍀</div><div class="feature-name">Luck System</div><div class="feature-desc">Spend rare ores to unlock 22 Luck levels, each pushing the odds further in your favor. The endgame never ends.</div><span class="feature-tag">PROGRESSION</span></div>
+    <div class="feature-card"><div class="feature-icon">✨</div><div class="feature-name">Wish System</div><div class="feature-desc">Focus your luck on a specific ore. Three wishes a day, four-hour cooldown. Use them wisely.</div><span class="feature-tag">STRATEGY</span></div>
+    <div class="feature-card"><div class="feature-icon">🗓</div><div class="feature-name">Seasonal Ores</div><div class="feature-desc">Log in on New Year's, Halloween, Christmas, and more to receive exclusive time-locked ores that never roll naturally.</div><span class="feature-tag">EVENTS</span></div>
+  </div>
+</section>
+
+<section id="tiers">
+  <div class="section-label">Ore Tiers</div>
+  <h2 class="section-title">How rare can you go?</h2>
+  <div class="tiers-list">
+    <div class="tier-chip" style="color:#aaa;border-color:rgba(170,170,170,0.3);background:rgba(170,170,170,0.05)">Uncommon</div>
+    <div class="tier-chip" style="color:#cc2222;border-color:rgba(204,34,34,0.3);background:rgba(204,34,34,0.05)">Rare</div>
+    <div class="tier-chip" style="color:#cc6600;border-color:rgba(204,102,0,0.3);background:rgba(204,102,0,0.05)">Epic</div>
+    <div class="tier-chip" style="color:#cc44aa;border-color:rgba(204,68,170,0.3);background:rgba(204,68,170,0.05)">Mythical</div>
+    <div class="tier-chip" style="color:#d4aa00;border-color:rgba(212,170,0,0.3);background:rgba(212,170,0,0.05)">Legendary</div>
+    <div class="tier-chip" style="color:#22aa44;border-color:rgba(34,170,68,0.3);background:rgba(34,170,68,0.05)">Exquisite</div>
+    <div class="tier-chip" style="color:#00bfff;border-color:rgba(0,191,255,0.3);background:rgba(0,191,255,0.05)">Cosmic</div>
+    <div class="tier-chip" style="color:#aaff00;border-color:rgba(170,255,0,0.3);background:rgba(170,255,0,0.05)">Divine</div>
+    <div class="tier-chip" style="color:#4466ff;border-color:rgba(68,102,255,0.3);background:rgba(68,102,255,0.05)">Astronomical</div>
+    <div class="tier-chip" style="color:#cc4444;border-color:rgba(204,68,68,0.3);background:rgba(204,68,68,0.05)">Celestial</div>
+    <div class="tier-chip" style="color:#aaaaaa;border-color:rgba(170,170,170,0.3);background:rgba(170,170,170,0.08)">Absolute</div>
+    <div class="tier-chip" style="color:#ff66ff;border-color:rgba(255,102,255,0.3);background:rgba(255,102,255,0.05)">Exclusive</div>
+    <div class="tier-chip" style="color:#fff;border-color:rgba(255,255,255,0.3);background:rgba(255,255,255,0.05)">Seasonal</div>
+  </div>
+</section>
+
+<section id="about">
+  <div class="about-inner">
+    <div class="section-label">About</div>
+    <h2 class="section-title" style="margin-bottom:32px">Built by one person</h2>
+    <p>Word Mining Game is an indie idle game made by <a href="https://piffgames.itch.io" target="_blank">PiffGames</a>. What started as a simple concept grew into a full progression system with hundreds of ores, a live social layer, and a global community.</p>
+    <p>Everything — the engine, the balance, the backend — is built and maintained solo. If you enjoy the game, the best thing you can do is share it.</p>
+    <div style="margin-top:32px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <a href="https://piffgames.itch.io/word-mining-gaming-wmg" target="_blank" class="btn-primary">Play on itch.io</a>
+      <a href="https://discord.gg/G8qA9ZqMx" target="_blank" class="btn-secondary">Join Discord</a>
+    </div>
+  </div>
+</section>
+
+<section id="changelog">
+  <div class="section-label">Updates</div>
+  <h2 class="section-title">Changelog</h2>
+  <div class="changelog-list">
+    <div class="cl-entry">
+      <div class="cl-version">Update 1.4</div><div class="cl-date">June 2026</div>
+      <ul class="cl-items">
+        <li>Friends system with live chat</li><li>Trading system with Discord notifications</li>
+        <li>Seasonal ores — 8 holiday-exclusive words</li><li>Profile pictures and player profiles</li>
+        <li>Global chat broadcasts to all online players</li>
+        <li>22 Luck levels, new Celestial and Astronomical ores</li>
+        <li>Mobile scaling and PWA support</li>
+      </ul>
+    </div>
+    <div class="cl-entry">
+      <div class="cl-version">Update 1.3</div><div class="cl-date">Early 2026</div>
+      <ul class="cl-items">
+        <li>Capstone burst upgrade</li><li>Cloud save and restore</li>
+        <li>Leaderboard with rarest ore tracking</li><li>Wish system</li><li>10 Luck levels</li>
+      </ul>
+    </div>
+    <div class="cl-entry">
+      <div class="cl-version">Update 1.0</div><div class="cl-date">2025</div>
+      <ul class="cl-items">
+        <li>Initial release on itch.io</li><li>Core mining loop with 200+ ores</li><li>Upgrade system</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="download">
+  <div class="download-card">
+    <div class="download-icon">🖥️</div>
+    <div class="download-title">Desktop App</div>
+    <div class="download-sub">Play Word Mining Game as a native Windows app. Same game, same account, same leaderboard — always up to date automatically.</div>
+    <a href="https://github.com/piffgames/wmg-desktop/releases/latest/download/WordMiningGame-Setup.exe" class="btn-primary">Download for Windows</a>
+    <div class="download-meta">Auto-updates · Free forever</div>
+  </div>
+</section>
+
+<footer>
+  <span class="footer-logo">⛏ Word Mining Game</span>
+  <div class="footer-links">
+    <a href="https://piffgames.itch.io/word-mining-gaming-wmg" target="_blank">itch.io</a>
+    <a href="https://discord.gg/G8qA9ZqMx" target="_blank">Discord</a>
+    <a href="https://github.com/piffgames" target="_blank">GitHub</a>
+  </div>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+// !! REPLACE with your actual Firebase config from the game file !!
+const FIREBASE_CONFIG={
+  apiKey:"PASTE_YOUR_API_KEY_HERE",
+  authDomain:"wordmg.firebaseapp.com",
+  databaseURL:"https://wordmg-default-rtdb.firebaseio.com",
+  projectId:"wordmg",
+  storageBucket:"wordmg.appspot.com",
+  messagingSenderId:"PASTE_HERE",
+  appId:"PASTE_HERE"
+};
+
+var siteDB,siteSortMode='words',pfpCache={};
+var TIER_ORDER={Absolute:11,Celestial:10,Astronomical:9,Divine:8,Cosmic:7,Exquisite:6,Legendary:5,Mythical:4,Epic:3,Rare:2,Uncommon:1};
+var TIER_COLORS={Uncommon:'#aaa',Rare:'#cc2222',Epic:'#cc6600',Mythical:'#cc44aa',Legendary:'#d4aa00',Exquisite:'#22aa44',Cosmic:'#00bfff',Divine:'#aaff00',Astronomical:'#4466ff',Celestial:'#cc4444',Absolute:'#aaaaaa',Exclusive:'#ff66ff',Seasonal:'#fff'};
+
+window.addEventListener('load',function(){
+  try{
+    var app=firebase.initializeApp(FIREBASE_CONFIG,'siteApp');
+    siteDB=firebase.database(app);
+    loadSiteLB();
+    siteDB.ref('presence').on('value',function(s){document.getElementById('site-online-count').textContent='● '+s.numChildren()+' online';});
+    setInterval(loadSiteLB,30000);
+  }catch(e){console.warn('Firebase init failed',e);}
+});
+
+function setSiteSort(m){
+  siteSortMode=m;
+  document.getElementById('site-sort-words').className='lb-sort-btn'+(m==='words'?' active':'');
+  document.getElementById('site-sort-rarest').className='lb-sort-btn'+(m==='rarest'?' active':'');
+  loadSiteLB();
+}
+
+function loadSiteLB(){
+  if(!siteDB)return;
+  var el=document.getElementById('site-lb-entries');
+  Promise.all([siteDB.ref('leaderboard').once('value'),siteDB.ref('leaderboardHidden').once('value')])
+  .then(function(r){
+    var snap=r[0],hSnap=r[1];
+    if(!snap.exists()){el.innerHTML='<div class="lb-loading">No entries yet</div>';return;}
+    var hidden={};
+    if(hSnap.exists())hSnap.forEach(function(c){hidden[c.key]=true;});
+    var entries=[];
+    snap.forEach(function(c){var v=c.val();if(!hidden[v.username])entries.push(v);});
+    if(siteSortMode==='rarest'){
+      entries.sort(function(a,b){var ta=TIER_ORDER[a.rarest]||0,tb=TIER_ORDER[b.rarest]||0;return tb!==ta?tb-ta:(b.words||0)-(a.words||0);});
+    }else{entries.sort(function(a,b){return (b.words||0)-(a.words||0);});}
+    el.innerHTML='';
+    document.getElementById('stat-players').textContent=entries.length+'+';
+    entries.forEach(function(e,i){
+      var row=document.createElement('div');row.className='lb-entry';
+      var rC=i===0?'#ffd700':i===1?'#ccc':i===2?'#cd7f32':'#555';
+      var pfp=document.createElement('div');pfp.className='lb-pfp-sm';pfp.textContent='👤';
+      loadSitePfp(e.username,pfp);
+      var info=document.createElement('div');info.className='lb-info';
+      var rarestCol=TIER_COLORS[e.rarest]||'#888';
+      info.innerHTML='<div class="lb-uname">'+(i===0?'👑 ':'')+e.username+'</div>'
+        +'<div class="lb-rarest" style="color:'+rarestCol+'">'+(e.rarest&&e.rarest!=='-'?e.rarest:'—')+'</div>';
+      var wv=document.createElement('span');wv.className='lb-words-val';wv.textContent=(e.words||0).toLocaleString();
+      row.innerHTML='<span class="lb-rank" style="color:'+rC+'">#'+(i+1)+'</span>';
+      row.appendChild(pfp);row.appendChild(info);row.appendChild(wv);
+      el.appendChild(row);
+    });
+  }).catch(function(){el.innerHTML='<div class="lb-loading">Failed to load</div>';});
+}
+
+function loadSitePfp(u,el){
+  if(pfpCache[u]!==undefined){if(pfpCache[u])el.innerHTML='<img src="'+pfpCache[u]+'" alt="">';return;}
+  if(!siteDB)return;
+  siteDB.ref('profiles/'+u+'/pfp').once('value').then(function(s){
+    pfpCache[u]=s.exists()?s.val():null;
+    if(pfpCache[u])el.innerHTML='<img src="'+pfpCache[u]+'" alt="">';
+  }).catch(function(){pfpCache[u]=null;});
+}
+
+// Particle hero
+(function(){
+  var c=document.getElementById('particle-canvas'),ctx=c.getContext('2d'),P=[],W,H;
+  function resize(){W=c.width=window.innerWidth;H=c.height=c.parentElement.offsetHeight||window.innerHeight;}
+  resize();window.addEventListener('resize',resize);
+  var cols=['#44ff8820','#ffd70012','#4466ff12','#cc444412','#00bfff10'];
+  for(var i=0;i<60;i++)P.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*2+0.5,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,c:cols[i%cols.length]});
+  (function draw(){
+    ctx.clearRect(0,0,W,H);
+    P.forEach(function(p){
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=p.c;ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  })();
+})();
+</script>
+</body>
+</html>
