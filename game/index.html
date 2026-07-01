@@ -471,7 +471,7 @@ function renderWords(){
 
   data.forEach(function(ore){
     var col=ore.color||TIER_COLORS[ore.ti]||'#aaa';
-    var row=document.createElement('div');row.className='ore-row';
+    var row=document.createElement('div');row.className='ore-row'; 
 
     var main=document.createElement('div');main.className='ore-row-main';
     main.innerHTML='<div class="ore-dot" style="background:'+col+'"></div>'
